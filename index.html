@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <base href="/AnchorMan/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="AnchorMan uses the human body as a geometric anchor for camera control in video-to-video generation.">
+  <title>Anchor the Man, Move the Camera</title>
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/academicons/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="stylesheet" href="./static/css/anchorman.css">
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script defer src="./static/js/index.js"></script>
+</head>
+<body>
+
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title">Anchor the Man, Move the Camera</h1>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">Yuntian Ke<sup>1</sup>,</span>
+            <span class="author-block"><a href="https://www.wlyu.me/">Weijie Lyu</a><sup>2</sup>,</span>
+            <span class="author-block"><a href="https://chenshuo20.github.io/">Shuo Chen</a><sup>2</sup>,</span>
+            <span class="author-block"><a href="https://zhixinshu.github.io/">Zhixin Shu</a><sup>3</sup>,</span>
+            <span class="author-block"><a href="https://faculty.ucmerced.edu/mhyang/">Ming-Hsuan Yang</a><sup>2</sup></span>
+          </div>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block"><sup>1</sup>University of Pennsylvania&nbsp;&nbsp;</span>
+            <span class="author-block"><sup>2</sup>University of California, Merced&nbsp;&nbsp;</span>
+            <span class="author-block"><sup>3</sup>Adobe Research</span>
+          </div>
+          <div class="column has-text-centered">
+            <div class="publication-links">
+              <span class="link-block">
+                <a class="external-link button is-normal is-rounded is-dark" aria-disabled="true" title="Coming soon">
+                  <span class="icon"><i class="ai ai-arxiv"></i></span><span>arXiv (coming soon)</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a href="https://github.com/kytttt/AnchorMan" class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="fab fa-github"></i></span><span>Code (coming soon)</span>
+                </a>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="hero teaser">
+  <div class="container is-max-desktop">
+    <div class="hero-body">
+      <a href="./static/images/teaser.jpg"><img src="./static/images/teaser.jpg" width="2000" height="960" alt="AnchorMan teaser"></a>
+      <h2 class="subtitle has-text-centered teaser-sub">
+        <span class="anchorman">AnchorMan</span> uses the <b class="hl">reconstruction of a human in the scene as the anchor</b> to control the camera for video generation.
+        It can be applied to <b class="hl">multi-person scenarios</b>. Given an image input and a driving video, the anchor representation can also be used for <b class="hl">motion control</b>.
+      </h2>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+Existing camera-controlled video generation methods often fail when a person is the main subject.
+Due to the ambiguous implicit camera representation or inaccurate explicit geometry estimation, the generated video often displays incoherent camera changes between the human and the background, as well as distorted human structure or motion.
+We introduce <span class="anchorman">AnchorMan</span>, a video-to-video method that uses the <b class="hl">human body as a geometric anchor</b> for <b class="hl">camera control</b>.
+Given a source video and a target camera trajectory, we reconstruct a body mesh from the first frame and render it along the estimated source trajectory and the requested target trajectory.
+The paired renderings specify the viewpoint change relative to the subject, independent of the unknown scene scale, and supply body geometry for sides the source never shows.
+Replacing the fixed mesh with a sequence of posed meshes extends the same condition to <b class="hl">motion control</b>.
+We train a bidirectional model on synthetic renderings and real captures, and distill a <b class="hl">causal variant</b> that accepts updated camera commands as it generates successive chunks.
+On an extensive camera-control benchmark, <span class="anchorman">AnchorMan</span> achieves the highest joint success rate across camera, subject, and image-quality checks and the lowest body-orientation error on orbit trajectories.
+We plan to release the model weights and source code.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered">Method</h2>
+    <a href="./static/images/overview.jpg"><img class="fig fig-lg" src="./static/images/overview.jpg" width="2000" height="876" alt="Overview of AnchorMan"></a>
+    <p class="fig-caption"><b>Overview of <span class="anchorman">AnchorMan</span>.</b> (a) SAM 3D Body reconstructs a mesh from the first source frame; the frozen mesh is rendered as
+      canonical normal maps under the source and target cameras. (b) Source and noisy target latents are concatenated along height, the condition maps along channels.</p>
+    <div class="method-text">
+      <p><b>Human-anchored condition.</b> The rendered body shows <b class="hl">where</b> the person appears, <b class="hl">how large</b>, and
+        <b class="hl">which side</b> faces the camera. Rendering the frozen first-frame mesh under the source and target cameras gives two conditions whose difference encodes the
+        relative camera motion; the model infers human motion and the surrounding scene from the source video. Per-frame meshes from a driving video give <b class="hl">motion control</b>, and rendering them under
+        moving cameras gives <b class="hl">joint control</b>.</p>
+      <p><b>Height concatenation.</b> We adapt Wan2.2-Fun-5B-Control with LoRA. Source and noisy target latents are concatenated along height; placing the target above
+        the source keeps corresponding frames at the same temporal position for chunk-wise causal attention.</p>
+    </div>
+
+    <h3 class="title is-4 has-text-centered">Causal generation: <span class="anchorman">AnchorMan-DMD</span></h3>
+    <a href="./static/images/causal_dmd.jpg"><img class="fig fig-md" src="./static/images/causal_dmd.jpg" width="1400" height="1129" alt="Causal generation and distillation"></a>
+    <div class="method-text">
+      <p>A <b class="hl">block-causal mask</b>, Diffusion Forcing, and DMD distillation give a causal model with four denoising steps per chunk; the first chunk is
+        cached as an <b class="hl">attention sink</b>. Future geometric conditions can be updated without regenerating completed chunks.</p>
+    </div>
+    <dl class="stats">
+      <div><dt>10.7&nbsp;s</dt><dd><span class="anchorman">AnchorMan-DMD</span>, 81-frame 832&times;480 clip, one RTX 6000 Ada</dd></div>
+      <div><dt>122&nbsp;s</dt><dd>bidirectional <span class="anchorman">AnchorMan</span>, same clip and GPU</dd></div>
+      <div><dt>4 steps</dt><dd>denoising steps per chunk</dd></div>
+    </dl>
+    <p class="section-note">Denoising time only.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered">Training Data</h2>
+    <a href="./static/images/data_sources.jpg"><img class="fig fig-md" src="./static/images/data_sources.jpg" width="1600" height="1219" alt="Examples of constructed training pairs"></a>
+    <div class="method-text">
+      <p>Paired videos with body conditions from <b class="hl">MultiCamVideo</b>, <b class="hl">SynCam</b>, <b class="hl">MVHumanNet</b> (rendered scenes and HDRI
+        composites) and <b class="hl">DL3DV</b> (inserted human). Camera-control pairs render one fixed mesh along both camera paths; motion-control pairs use
+        per-frame target meshes. Columns: source, source condition, target, target condition.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-widescreen">
+    <h2 class="title is-3 has-text-centered">Results</h2>
+    <h3 class="title is-4 has-text-centered">Camera control on in-the-wild videos</h3>
+    <p class="section-note"><span class="anchorman">AnchorMan</span> (bidirectional) compared with ReCamMaster and GEN3C on in-the-wild human videos.</p>
+    <div class="carousel" data-n="3">
+      <div class="carousel-stage narrow-stage">
+        <button type="button" class="car-btn car-prev" aria-label="Previous result"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15.5 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="slide is-active" data-k="0">
+      <div class="result-item narrow">
+        
+        <div class="vbox">
+          <video muted loop playsinline preload="none" poster="./static/images/posters/baselines_orbit_left90.jpg" data-src="./static/videos/baselines/orbit_left90.mp4" aria-label="comparison"></video>
+          <div class="tags c2"><span class="">Source</span><span class="">ReCamMaster</span><span class="">GEN3C</span><span class="ours">AnchorMan</span></div>
+        </div>
+        <p class="result-caption">Orbit left 90&deg;</p>
+      </div>
+      </div>
+      <div class="slide" data-k="1">
+      <div class="result-item narrow">
+        
+        <div class="vbox">
+          <video muted loop playsinline preload="none" poster="./static/images/posters/baselines_arcup60_orbit90.jpg" data-src="./static/videos/baselines/arcup60_orbit90.mp4" aria-label="comparison"></video>
+          <div class="tags c2"><span class="">Source</span><span class="">ReCamMaster</span><span class="">GEN3C</span><span class="ours">AnchorMan</span></div>
+        </div>
+        <p class="result-caption">Arc up 60&deg; + orbit 90&deg;</p>
+      </div>
+      </div>
+      <div class="slide" data-k="2">
+      <div class="result-item narrow">
+        
+        <div class="vbox">
+          <video muted loop playsinline preload="none" poster="./static/images/posters/baselines_translate_up.jpg" data-src="./static/videos/baselines/translate_up.mp4" aria-label="comparison"></video>
+          <div class="tags c2"><span class="">Source</span><span class="">ReCamMaster</span><span class="">GEN3C</span><span class="ours">AnchorMan</span></div>
+        </div>
+        <p class="result-caption">Camera moves up</p>
+      </div>
+      </div>
+        <button type="button" class="car-btn car-next" aria-label="Next result"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M8.5 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+      <div class="carousel-nav"><button type="button" class="car-dot is-active" data-k="0" aria-label="Result 1 of 3"></button><button type="button" class="car-dot" data-k="1" aria-label="Result 2 of 3"></button><button type="button" class="car-dot" data-k="2" aria-label="Result 3 of 3"></button><span class="car-count">1 / 3</span></div>
+    </div>
+    <h3 class="title is-4 has-text-centered">Motion control from a reference image</h3>
+    <p class="section-note">The source is a reference image repeated over time, and the target condition renders per-frame meshes. The motion comes from an unrelated driving video; this retargeting is an image-based heuristic, not calibrated motion capture.</p>
+    <div class="carousel" data-n="3">
+      <div class="carousel-stage ">
+        <button type="button" class="car-btn car-prev" aria-label="Previous result"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15.5 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="slide is-active" data-k="0">
+      <div class="result-item">
+        <div class="vbox">
+          <video muted loop playsinline preload="none" poster="./static/images/posters/motion_sidestep.jpg" data-src="./static/videos/motion/sidestep.mp4" aria-label="motion control"></video>
+        </div>
+        <p class="result-caption">Sidestep</p>
+      </div>
+      </div>
+      <div class="slide" data-k="1">
+      <div class="result-item">
+        <div class="vbox">
+          <video muted loop playsinline preload="none" poster="./static/images/posters/motion_kickstep.jpg" data-src="./static/videos/motion/kickstep.mp4" aria-label="motion control"></video>
+        </div>
+        <p class="result-caption">Kick step</p>
+      </div>
+      </div>
+      <div class="slide" data-k="2">
+      <div class="result-item">
+        <div class="vbox">
+          <video muted loop playsinline preload="none" poster="./static/images/posters/motion_landing.jpg" data-src="./static/videos/motion/landing.mp4" aria-label="motion control"></video>
+        </div>
+        <p class="result-caption">Superhero landing</p>
+      </div>
+      </div>
+        <button type="button" class="car-btn car-next" aria-label="Next result"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M8.5 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+      <div class="carousel-nav"><button type="button" class="car-dot is-active" data-k="0" aria-label="Result 1 of 3"></button><button type="button" class="car-dot" data-k="1" aria-label="Result 2 of 3"></button><button type="button" class="car-dot" data-k="2" aria-label="Result 3 of 3"></button><span class="car-count">1 / 3</span></div>
+    </div>
+    <h3 class="title is-4 has-text-centered">Joint camera and motion control</h3>
+    <p class="section-note">For joint camera and motion control, the per-frame meshes are rendered under moving target cameras.</p>
+    <div class="carousel" data-n="3">
+      <div class="carousel-stage ">
+        <button type="button" class="car-btn car-prev" aria-label="Previous result"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15.5 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="slide is-active" data-k="0">
+      <div class="result-item">
+        <div class="vbox">
+          <video muted loop playsinline preload="none" poster="./static/images/posters/joint_sidestep.jpg" data-src="./static/videos/joint/sidestep.mp4" aria-label="joint control"></video>
+        </div>
+        <p class="result-caption">Sidestep with an orbit and with an upward arc</p>
+      </div>
+      </div>
+      <div class="slide" data-k="1">
+      <div class="result-item">
+        <div class="vbox">
+          <video muted loop playsinline preload="none" poster="./static/images/posters/joint_kickstep.jpg" data-src="./static/videos/joint/kickstep.mp4" aria-label="joint control"></video>
+        </div>
+        <p class="result-caption">Kick step with a pan right and back, and with an orbit</p>
+      </div>
+      </div>
+      <div class="slide" data-k="2">
+      <div class="result-item">
+        <div class="vbox">
+          <video muted loop playsinline preload="none" poster="./static/images/posters/joint_landing.jpg" data-src="./static/videos/joint/landing.mp4" aria-label="joint control"></video>
+        </div>
+        <p class="result-caption">Superhero landing with an upward arc and with an orbit</p>
+      </div>
+      </div>
+        <button type="button" class="car-btn car-next" aria-label="Next result"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M8.5 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+      <div class="carousel-nav"><button type="button" class="car-dot is-active" data-k="0" aria-label="Result 1 of 3"></button><button type="button" class="car-dot" data-k="1" aria-label="Result 2 of 3"></button><button type="button" class="car-dot" data-k="2" aria-label="Result 3 of 3"></button><span class="car-count">1 / 3</span></div>
+    </div>
+    <h3 class="title is-4 has-text-centered">360&deg; rendering from a video and from a single image</h3>
+    <p class="section-note">Full 360&deg; orbits from a background-free video (top) and from a single image (bottom).</p>
+    <div class="carousel" data-n="3">
+      <div class="carousel-stage ">
+        <button type="button" class="car-btn car-prev" aria-label="Previous result"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15.5 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="slide is-active" data-k="0">
+      <div class="result-item">
+        
+        <div class="vbox">
+          <video muted loop playsinline preload="none" poster="./static/images/posters/r360_5802975.jpg" data-src="./static/videos/r360/5802975.mp4" aria-label="360 degree orbit"></video>
+          <div class="tags c3"><span class="">Source video</span><span class="">Body condition</span><span class="ours">AnchorMan</span><span class="">Source image</span><span class="">Body condition</span><span class="ours">AnchorMan</span></div>
+        </div>
+        <p class="result-caption"></p>
+      </div>
+      </div>
+      <div class="slide" data-k="1">
+      <div class="result-item">
+        
+        <div class="vbox">
+          <video muted loop playsinline preload="none" poster="./static/images/posters/r360_12322739.jpg" data-src="./static/videos/r360/12322739.mp4" aria-label="360 degree orbit"></video>
+          <div class="tags c3"><span class="">Source video</span><span class="">Body condition</span><span class="ours">AnchorMan</span><span class="">Source image</span><span class="">Body condition</span><span class="ours">AnchorMan</span></div>
+        </div>
+        <p class="result-caption"></p>
+      </div>
+      </div>
+      <div class="slide" data-k="2">
+      <div class="result-item">
+        
+        <div class="vbox">
+          <video muted loop playsinline preload="none" poster="./static/images/posters/r360_15897638.jpg" data-src="./static/videos/r360/15897638.mp4" aria-label="360 degree orbit"></video>
+          <div class="tags c3"><span class="">Source video</span><span class="">Body condition</span><span class="ours">AnchorMan</span><span class="">Source image</span><span class="">Body condition</span><span class="ours">AnchorMan</span></div>
+        </div>
+        <p class="result-caption"></p>
+      </div>
+      </div>
+        <button type="button" class="car-btn car-next" aria-label="Next result"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M8.5 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+      <div class="carousel-nav"><button type="button" class="car-dot is-active" data-k="0" aria-label="Result 1 of 3"></button><button type="button" class="car-dot" data-k="1" aria-label="Result 2 of 3"></button><button type="button" class="car-dot" data-k="2" aria-label="Result 3 of 3"></button><span class="car-count">1 / 3</span></div>
+    </div>
+    <h3 class="title is-4 has-text-centered">Long videos (<span class="anchorman">AnchorMan-DMD</span>)</h3>
+    <p class="section-note">161 frames. Beyond the 81-frame training length, each chunk attends to itself, the first chunk, and the six most recent chunks; the first chunk serves as an attention sink.</p>
+    <div class="carousel" data-n="2">
+      <div class="carousel-stage ">
+        <button type="button" class="car-btn car-prev" aria-label="Previous result"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15.5 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="slide is-active" data-k="0">
+      <div class="result-item">
+        
+        <div class="vbox">
+          <video muted loop playsinline preload="none" poster="./static/images/posters/long_pan.jpg" data-src="./static/videos/long/pan.mp4" aria-label="long video"></video>
+          <div class="tags c2"><span class="">Source</span><span class="ours">AnchorMan-DMD</span></div>
+        </div>
+        <p class="result-caption">Pan</p>
+      </div>
+      </div>
+      <div class="slide" data-k="1">
+      <div class="result-item">
+        
+        <div class="vbox">
+          <video muted loop playsinline preload="none" poster="./static/images/posters/long_zoom.jpg" data-src="./static/videos/long/zoom.mp4" aria-label="long video"></video>
+          <div class="tags c2"><span class="">Source</span><span class="ours">AnchorMan-DMD</span></div>
+        </div>
+        <p class="result-caption">Zoom in and out</p>
+      </div>
+      </div>
+        <button type="button" class="car-btn car-next" aria-label="Next result"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M8.5 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+      <div class="carousel-nav"><button type="button" class="car-dot is-active" data-k="0" aria-label="Result 1 of 2"></button><button type="button" class="car-dot" data-k="1" aria-label="Result 2 of 2"></button><span class="car-count">1 / 2</span></div>
+    </div>
+    <h3 class="title is-4 has-text-centered">Interactive camera control (<span class="anchorman">AnchorMan-DMD</span>)</h3>
+    <p class="section-note"><span class="anchorman">AnchorMan-DMD</span> accepts updated camera commands as it generates successive chunks: future geometric conditions can be updated without regenerating completed chunks. On an RTX 6000 Ada it generates an 81-frame clip in 10.7 s (7.6 frames/s).</p>
+    <div class="carousel" data-n="3">
+      <div class="carousel-stage ">
+        <button type="button" class="car-btn car-prev" aria-label="Previous result"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15.5 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="slide is-active" data-k="0">
+      <div class="result-item">
+        <div class="vbox">
+          <video muted loop playsinline preload="none" poster="./static/images/posters/interactive_lake_arcup45return.jpg" data-src="./static/videos/interactive/lake_arcup45return.mp4" aria-label="interactive demo"></video>
+        </div>
+        <p class="result-caption">Arc up and back down</p>
+      </div>
+      </div>
+      <div class="slide" data-k="1">
+      <div class="result-item">
+        <div class="vbox">
+          <video muted loop playsinline preload="none" poster="./static/images/posters/interactive_dancer_arcup60.jpg" data-src="./static/videos/interactive/dancer_arcup60.mp4" aria-label="interactive demo"></video>
+        </div>
+        <p class="result-caption">Arc up over a moving dancer</p>
+      </div>
+      </div>
+      <div class="slide" data-k="2">
+      <div class="result-item">
+        <div class="vbox">
+          <video muted loop playsinline preload="none" poster="./static/images/posters/interactive_jordan_bullet_time.jpg" data-src="./static/videos/interactive/jordan_bullet_time.mp4" aria-label="interactive demo"></video>
+        </div>
+        <p class="result-caption">The source is paused mid-jump while the camera moves around the player and back</p>
+      </div>
+      </div>
+        <button type="button" class="car-btn car-next" aria-label="Next result"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M8.5 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+      <div class="carousel-nav"><button type="button" class="car-dot is-active" data-k="0" aria-label="Result 1 of 3"></button><button type="button" class="car-dot" data-k="1" aria-label="Result 2 of 3"></button><button type="button" class="car-dot" data-k="2" aria-label="Result 3 of 3"></button><span class="car-count">1 / 3</span></div>
+    </div>
+    <h3 class="title is-4 has-text-centered">Choosing the anchor in multi-person scenes</h3>
+    <p class="section-note">The user selects the anchor by passing person boxes on the first source frame to SAM 3D Body; the selected people are reconstructed with fixed poses and rendered together. People who are not selected appear only in the source video and are not constrained by the condition.</p>
+    <div class="carousel" data-n="3">
+      <div class="carousel-stage ">
+        <button type="button" class="car-btn car-prev" aria-label="Previous result"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15.5 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="slide is-active" data-k="0">
+      <div class="result-item">
+        <div class="vbox">
+          <video muted loop playsinline preload="none" poster="./static/images/posters/anchor_jordan.jpg" data-src="./static/videos/anchor/jordan.mp4" aria-label="anchor choice"></video>
+        </div>
+        <p class="result-caption">Basketball</p>
+      </div>
+      </div>
+      <div class="slide" data-k="1">
+      <div class="result-item">
+        <div class="vbox">
+          <video muted loop playsinline preload="none" poster="./static/images/posters/anchor_two_people.jpg" data-src="./static/videos/anchor/two_people.mp4" aria-label="anchor choice"></video>
+        </div>
+        <p class="result-caption">Two people</p>
+      </div>
+      </div>
+      <div class="slide" data-k="2">
+      <div class="result-item">
+        <div class="vbox">
+          <video muted loop playsinline preload="none" poster="./static/images/posters/anchor_judo.jpg" data-src="./static/videos/anchor/judo.mp4" aria-label="anchor choice"></video>
+        </div>
+        <p class="result-caption">Judo</p>
+      </div>
+      </div>
+        <button type="button" class="car-btn car-next" aria-label="Next result"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M8.5 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+      <div class="carousel-nav"><button type="button" class="car-dot is-active" data-k="0" aria-label="Result 1 of 3"></button><button type="button" class="car-dot" data-k="1" aria-label="Result 2 of 3"></button><button type="button" class="car-dot" data-k="2" aria-label="Result 3 of 3"></button><span class="car-count">1 / 3</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <h2 class="title">BibTeX</h2>
+    <div class="bibtex-wrap">
+      <button class="button is-small copy-btn" id="copy-bibtex" type="button"><span class="icon"><i class="far fa-copy"></i></span><span class="label">Copy</span></button>
+      <pre><code id="bibtex">@article{ke2026anchorman,
+  title   = {Anchor the Man, Move the Camera},
+  author  = {Ke, Yuntian and Lyu, Weijie and Chen, Shuo and Shu, Zhixin and Yang, Ming-Hsuan},
+  journal = {arXiv preprint},
+  year    = {2026}
+}</code></pre>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content">
+          <p>This page is adapted from the <a href="https://nerfies.github.io" target="_blank" rel="noopener">Nerfies</a> project page.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
